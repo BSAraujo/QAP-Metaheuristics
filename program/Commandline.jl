@@ -8,7 +8,7 @@ struct Commandline
     output_path::String              # Output path
 end
 
-
+# Constructor of struct Commandline
 function Commandline()
     """
     Read command line arguments.
@@ -21,9 +21,6 @@ function Commandline()
             help = "Path to instance."
             arg_type = String
             required = true
-        "--output","-o"
-            help = "Path to output"
-            arg_type = String
         "--cpu_time","-t"
             help = "CPU time in seconds (defaults to 300s)."
             arg_type = Int
@@ -40,11 +37,11 @@ function Commandline()
     args = parse_args(s)
 
     # If no output path is specified then save solution in "outputs" folder with the same name as the instance
-    if args["output"] == nothing
+    if args["sol"] == nothing
         instance_name = split(args["instance_path"],'/')[end]
-        args["output"] = "../outputs/"*instance_name
+        args["sol"] = "../outputs/sol-"*instance_name
     end
 
-    c = Commandline(true, args["cpu_time"], args["seed"], args["instance_path"], args["output"])
+    c = Commandline(true, args["cpu_time"], args["seed"], args["instance_path"], args["sol"])
     return c
 end

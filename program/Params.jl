@@ -12,6 +12,7 @@ struct Params
     B::Array{Int64}  
 end
 
+# Constructor of struct Params
 function Params(pathToInstance::String, pathToOutput::String, seed::Int, maxTime::Int)
     datasetName = split(pathToInstance, '/')[end]
     sz, A, B = loadInstance(pathToInstance)
@@ -20,19 +21,24 @@ function Params(pathToInstance::String, pathToOutput::String, seed::Int, maxTime
 end
 
 function loadInstance(pathToInstance::String)
+    """
+    Loads instance file
+    """
     s = open(pathToInstance) do file
         read(file, String)
     end
     input_data = split(s,"\n\n")
 
     # Read size of instance
-    sz = parse(Int, input_data[1])
+    sz = parse(Int, strip(input_data[1]))
 
     # Read array A
     A = Array{Int64}(undef, sz, sz)
     input_A = input_data[2]
-    for (row,line) in enumerate(split(input_A, '\n'))
-        for (col,elem) in enumerate(split(line, ' '))
+    lines = split(input_A, '\n')
+    for row = 1:sz
+        line = lines[row] 
+        for (col,elem) in enumerate(split(strip(line), r"\s+"))
             A[row, col] = parse(Int64, elem)
         end
     end
@@ -40,7 +46,9 @@ function loadInstance(pathToInstance::String)
     # Read array B
     B = Array{Int64}(undef, sz, sz)
     input_B = input_data[3]
-    for (row,line) in enumerate(split(input_B, '\n'))
+    lines = split(input_B, '\n')
+    for row = 1:sz
+        line = lines[row]
         for (col,elem) in enumerate(split(strip(line), r"\s+"))
             B[row, col] = parse(Int64, elem)
         end
