@@ -1,20 +1,23 @@
 include("Solution.jl")
+include("Params.jl")
 
-# 1. Select a starting solution.
-# 2. Check the change in the value of the objective function 
-#      for all pairwise exchanges of facilities.
-# 3. If an improving exchange is found, 
-#      the best improving exchange is executed and we go to Step 2.
-# 4. If no improving exchange is found, the algorithm terminates.
+""" Descent Heuristic
+1. Select a starting solution.
+2. Check the change in the value of the objective function 
+     for all pairwise exchanges of facilities.
+3. If an improving exchange is found, 
+     the best improving exchange is executed and we go to Step 2.
+4. If no improving exchange is found, the algorithm terminates.
 
-# Local Search algorithm
-# S = Initial Solution 
-# While not Terminated
-#     Explore( N(S) ) ;
-#     If there is no better neighbor in N(s) Then Stop ;
-#     S = Select( N(S) ) ;
-# End While
-# Return Final solution found (local optima) 
+Local Search algorithm
+S = Initial Solution 
+While not Terminated
+    Explore( N(S) ) ;
+    If there is no better neighbor in N(s) Then Stop ;
+    S = Select( N(S) ) ;
+End While
+Return Final solution found (local optima) 
+"""
 function descentHeuristic(sol::Solution)::Solution
     improved::Bool = true
     while improved == true
@@ -32,6 +35,18 @@ end
 
 
 # TODO: Multi-start local search
-function multistartLS(num_trials::Int)::Solution
-    # TODO
+function multistartLS(params::Params, num_trials::Int)::Solution
+    bestSol::Solution = Solution(params) # Create random solution
+    bestSol = descentHeuristic(bestSol) # Local search
+    for trial = 1:num_trials
+        sol = Solution(params)
+
+        # Local Search
+        sol = descentHeuristic(sol)
+
+        if (sol.cost < bestSol.cost)
+            bestSol = sol
+        end
+    end
+    return bestSol
 end

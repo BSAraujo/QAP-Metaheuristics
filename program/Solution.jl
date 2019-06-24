@@ -4,7 +4,7 @@ include("Params.jl")
 struct Solution
     params::Params               # Access to the problem and dataset parameters
     permutation::Array{Int64}    # Permutation
-    cost::Float64                # Value of objective function for the solution
+    cost::Int64                # Value of objective function for the solution
 end
 
 # Constructor of struct Solution (random permutation)
@@ -57,3 +57,7 @@ function generateSwapNeighbors(sol::Solution)::Array{Solution}
     end
     return neighborhood
 end
+
+import Base: isless
+
+isless(a::Solution, b::Solution) = isless(a.cost, b.cost)

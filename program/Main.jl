@@ -19,19 +19,33 @@ function main()
     p = [i for i = 1:params.datasetSize]
     sol = Solution(params, p)
     printSolution(sol)
+    println()
+    #------------------------------------------------
 
     println("Random solution:")
     Rsol = Solution(params)
     printSolution(Rsol)
+    println()
+    #------------------------------------------------
 
     # Local Search
     println("Initial Solution:")
     printSolution(sol)
+    println()
+    #------------------------------------------------
     
     bestSol = descentHeuristic(sol)
 
     println("Best solution after local search (descent heuristic):")
     printSolution(bestSol)
+    println()
+    #------------------------------------------------
+
+    bestSol = multistartLS(params, 1000)
+    println("Multistart Local Search solution:")
+    printSolution(bestSol)
+    println()
+    #------------------------------------------------
 
     #cost = sum(A[i,j]*B[p[i],p[j]] for i = 1:n, j = 1:n)
     #println("Cost=$cost")
