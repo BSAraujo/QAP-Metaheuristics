@@ -8,8 +8,9 @@ struct Solution
 end
 
 # Constructor of struct Solution (random permutation)
-function Solution(params::Params)::Solution
+function Solution(params::Params, seed::Int64=0)::Solution
     # p = convert(Array{Int64}, transpose(randperm(params.datasetSize)))
+    Random.seed!(seed)
     p = randperm(params.datasetSize)
     sol = Solution(params, p)
     return sol

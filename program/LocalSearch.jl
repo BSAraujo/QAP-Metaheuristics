@@ -35,15 +35,15 @@ end
 
 
 # TODO: Multi-start local search
-function multistartLS(params::Params, num_trials::Int)::Solution
-    bestSol::Solution = Solution(params) # Create random solution
+function multistartLS(params::Params, num_trials::Int, seed=nothing)::Solution
+    if seed != nothing
+        Random.seed!(seed)
+    end
+    bestSol::Solution = Solution(params) # Random solution
     bestSol = descentHeuristic(bestSol) # Local search
     for trial = 1:num_trials
-        sol = Solution(params)
-
-        # Local Search
-        sol = descentHeuristic(sol)
-
+        sol = Solution(params) # Random solution
+        sol = descentHeuristic(sol) # Local Search
         if (sol.cost < bestSol.cost)
             bestSol = sol
         end
