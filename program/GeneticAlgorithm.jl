@@ -1,5 +1,7 @@
+using IterTools
 include("Solution.jl")
 include("Params.jl")
+include("Recombinations.jl")
 
 """ Genetic Algorithm
 Initialize population with random candidate solutions
@@ -12,15 +14,25 @@ Repeat until Termination condition is satisfied
     Select individuals for the next generation
 """
 
-function runGA(params::Params, max_generations::Int, populationSize::Int)::Solution
+function runGA(params::Params, max_generations::Int, populationSize::Int, recombineOp::Function=order1cx)
     # Check if population size is an even number
     if populationSize % 2 != 0
         populationSize += 1
     end
+    results = Dict{String,Any}()
+    results["entropy"] = []
+    results["numIndividuals"] = []
+    results["cost"] = []
+
     # Initialize population with random candidate solutions
     population = initializePopulation(populationSize)
+    bestSol = sort(population)[1]
+
+    append!(results["numIndividuals"],length(population))
+    append!(results["entropy"],entropy(population))
+    append!(results["cost"],bestSol.cost)
+
     generation = 0
-    bestSol::Solution
     # Repeat until Termination condition is satisfied
     while generation < max_generations
         # Select parents
@@ -28,7 +40,7 @@ function runGA(params::Params, max_generations::Int, populationSize::Int)::Solut
                    for i=1:Int(length(population)/2)]
 
         # Recombine pairs of solutions
-        offspring = recombinationOp(parents)
+        offspring = recombinationOp(parents, recombineOp)
 
         # Mutate the resulting offspring
         offspring = mutationOp(offspring)
@@ -40,11 +52,18 @@ function runGA(params::Params, max_generations::Int, populationSize::Int)::Solut
         population = vcat(population,offspring)
         population = selectionOp(population, populationSize)
 
-        bestSol = sort(population)[1]
+        sol = sort(population)[1]
+        # TODO: keep best observed solution
+        if sol < bestSol
+            bestSol = sol
+        end
 
+        append!(results["numIndividuals"],length(population))
+        append!(results["entropy"],entropy(population))
+        append!(results["cost"],bestSol.cost)
         generation += 1
     end
-    return bestSol
+    return bestSol, results
 end
 
 
@@ -54,100 +73,6 @@ function initializePopulation(populationSize::Int)::Array{Solution}
         population[k] = Solution(params)
     end
     return population
-end
-
-##############################################################################
-# Recombination operations
-
-function order1op(p1::Solution,p2::Solution,s=nothing)
-    n = p1.params.datasetSize
-    c_perm = zeros(Int, n)
-    if s == nothing
-        s = rand(1:n)
-    end
-    c_perm[s:min(n,s+Int(n/2)-1)] = p1.permutation[s:min(n,s+Int(n/2)-1)]
-    if s+Int(n/2)-1 > n
-        c_perm[1:(s+Int(n/2)-1) % n] = p1.permutation[1:(s+Int(n/2)-1) % n]
-    end
-
-    # Child 1
-    filled = 0
-    i = s+Int(n/2)
-    if i > n
-        i = (s+Int(n/2)) % n
-    end
-    j = i
-    while filled < Int(n/2)
-        if i > n
-            i = 1
-        end
-        if j > n
-            j = 1
-        end
-        tmp = p2.permutation[i]
-        if ~(tmp in c_perm)
-            c_perm[j] = tmp
-            filled += 1
-            j += 1
-        end
-        i += 1
-    end
-    if ~hasUniqueValues(c_perm)
-        throw("Child permutation must have unique values")
-    end
-    if sort(c_perm) != 1:n
-        throw("Child must be a permutation") 
-    end
-    params = p1.params
-    return Solution(params,c_perm),s
-end
-
-function hasUniqueValues(y::Array{Int64})::Bool
-    u = unique(y)
-    d = Dict([(i,count(x->x==i,y)) for i in u])
-    return all(x->x==true, [v for (k,v) in d] .== 1)
-end
-
-function order1cx(p1::Solution,p2::Solution)
-    # Order 1 crossover
-    c1,s = order1op(p1,p2) # Child 1
-    c2,_ = order1op(p2,p1,s) # Child 2
-    return (c1,c2)
-end
-
-
-function PMXcx(p1::Solution,p2::Solution)
-    # PMX crossover: http://www.rubicite.com/Tutorials/GeneticAlgorithms/CrossoverOperators/PMXCrossoverOperator.aspx
-    # TODO
-    return (c1,c2)
-end
-
-function Cyclecx(p1::Solution,p2::Solution)
-    # Cycle crossover: http://www.rubicite.com/Tutorials/GeneticAlgorithms/CrossoverOperators/CycleCrossoverOperator.aspx
-    # TODO
-    return (c1,c2)
-end
-
-function CohesiveMergecx(p1::Solution,p2::Solution)
-    # Cohesive Merging crossover: Zvi Drezner, "A new Genetic Algorithm for the QAP"
-    # TODO
-    return (c1,c2)
-end
-
-function ScrambledMergecx(p1::Solution,p2::Solution)
-    # Scrambled Merging crossover: Zvi Drezner, "A new Genetic Algorithm for the QAP"
-    # TODO
-    return (c1,c2)
-end
-
-
-function recombinationOp(parents,recombine=order1cx)::Array{Solution}
-    offspring = Array{Solution}(undef, 0)
-    for (p1,p2) in parents
-        (c1,c2) = recombine(p1,p2)
-        offspring = vcat(offspring, c1, c2)
-    end
-    return offspring
 end
 
 
@@ -170,11 +95,61 @@ function selectionOp(population::Array{Solution}, n::Int64)::Array{Solution}
     return population
 end
 
-# TODO: Diversity management
 
-# TODO: Biased fitness selection
+##############################################################################
+# Distances
 
 # TODO: distance between solutions. 
 # Example: number of variables with different values. Or maybe distance between strings
 
-# TODO: "Population entropy": maximum/average/median distance between any two solutions in the population
+# Hamming distance: number of positions with different values
+function hamming(s1::Solution,s2::Solution)::Float64
+    distance = sum(s1.permutation .!= s2.permutation)
+    return distance
+end
+
+# Distance between two permutations: https://math.stackexchange.com/questions/2492954/distance-between-two-permutations
+
+# Kendall-Tau distance: 
+# - https://en.wikipedia.org/wiki/Kendall_tau_distance
+# - https://stats.stackexchange.com/questions/168602/whats-the-kendall-taus-distance-between-these-2-rankings/238852#238852
+function kendallTau(s1::Solution,s2::Solution)::Float64
+    A = s1.permutation
+    B = s2.permutation
+    pairs = subsets(1:length(A), 2)
+    distance = 0
+    for (x,y) in pairs
+        a = A[x] - A[y]
+        b = B[x] - B[y]
+        # if discordant (different signs)
+        if (a * b < 0)
+            distance += 1
+        end
+    end
+    return distance
+end
+
+# "Population entropy": maximum/average/median distance between any two solutions in the population
+function entropy(population::Array{Solution}, distance=hamming, reduce=maximum)
+    combinations = subsets(population, 2)
+    distances = zeros(Float64, length(combinations)).-1
+    for (i,pairs) in enumerate(combinations)
+        s1,s2 = pairs
+        distances[i] = distance(s1,s2)
+    end
+    if ~all(distances .>= 0)
+        throw("All distances should be non negative!")
+    end
+    entropy = reduce(distances)
+    return entropy
+end
+
+
+# TODO: Diversity management
+
+# TODO: Biased fitness selection
+
+# TODO: save results from genetic algorithm:
+# generation, best cost, number of individuals, diversity measure
+
+# TODO: function tests, especially for the recombination operations
