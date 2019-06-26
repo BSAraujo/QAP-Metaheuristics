@@ -36,14 +36,17 @@ end
 
 # Multi-start local search
 function multistartLS(params::Params, num_trials::Int)::Solution
+    startTime = time()
     bestSol = Solution(params) # Random solution
     bestSol = descentHeuristic(bestSol) # Local search
-    for trial = 1:num_trials
+    trial = 1
+    while ((trial <= num_trials) && (time() - startTime < params.maxTime))
         sol = Solution(params) # Random solution
         sol = descentHeuristic(sol) # Local Search
         if (sol.cost < bestSol.cost)
             bestSol = sol
         end
+        trial += 1
     end
     return bestSol
 end

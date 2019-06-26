@@ -14,18 +14,21 @@ Repeat until Termination condition is satisfied
     Select individuals for the next generation
 """
 
-function runGA(params::Params, max_generations::Int, populationSize::Int, recombineOp::Function=order1cx)
+function runGA(params::Params, maxGenerations::Int, populationSize::Int, recombineOp::Function=order1cx)
+    startTime = time()
     # Check if population size is an even number
     if populationSize % 2 != 0
         populationSize += 1
     end
     results = Dict{String,Any}()
+    results["maxGenerations"] = maxGenerations
+    results["populationSize"] = populationSize
     results["entropy"] = []
     results["numIndividuals"] = []
     results["cost"] = []
 
     # Initialize population with random candidate solutions
-    population = initializePopulation(populationSize)
+    population = initializePopulation(params, populationSize)
     bestSol = sort(population)[1]
 
     append!(results["numIndividuals"],length(population))
@@ -34,7 +37,7 @@ function runGA(params::Params, max_generations::Int, populationSize::Int, recomb
 
     generation = 0
     # Repeat until Termination condition is satisfied
-    while generation < max_generations
+    while ((generation < maxGenerations) && (time() - startTime < params.maxTime))
         # Select parents
         parents = [(population[i], population[i+Int(length(population)/2)]) 
                    for i=1:Int(length(population)/2)]
@@ -53,7 +56,7 @@ function runGA(params::Params, max_generations::Int, populationSize::Int, recomb
         population = selectionOp(population, populationSize)
 
         sol = sort(population)[1]
-        # TODO: keep best observed solution
+        # record best observed solution
         if sol < bestSol
             bestSol = sol
         end
@@ -61,13 +64,15 @@ function runGA(params::Params, max_generations::Int, populationSize::Int, recomb
         append!(results["numIndividuals"],length(population))
         append!(results["entropy"],entropy(population))
         append!(results["cost"],bestSol.cost)
+        results["generations"] = generation
         generation += 1
     end
+    results["time"] = time() - startTime
     return bestSol, results
 end
 
 
-function initializePopulation(populationSize::Int)::Array{Solution}
+function initializePopulation(params::Params, populationSize::Int)::Array{Solution}
     population = Array{Solution}(undef, populationSize)
     for k = 1:populationSize
         population[k] = Solution(params)
@@ -130,7 +135,7 @@ function kendallTau(s1::Solution,s2::Solution)::Float64
 end
 
 # "Population entropy": maximum/average/median distance between any two solutions in the population
-function entropy(population::Array{Solution}, distance=hamming, reduce=maximum)
+function entropy(population::Array{Solution}, distance::Function=hamming, reduce::Function=maximum)
     combinations = subsets(population, 2)
     distances = zeros(Float64, length(combinations)).-1
     for (i,pairs) in enumerate(combinations)
@@ -153,3 +158,5 @@ end
 # generation, best cost, number of individuals, diversity measure
 
 # TODO: function tests, especially for the recombination operations
+
+# TODO: formulate and solve the Mathematical Programming model of the QAP

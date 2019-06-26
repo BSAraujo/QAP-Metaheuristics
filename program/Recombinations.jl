@@ -209,7 +209,7 @@ function scrambledMergecx(p1::Solution,p2::Solution)
 end
 
 
-function recombinationOp(parents,recombine=order1cx)::Array{Solution}
+function recombinationOp(parents,recombine::Function=order1cx)::Array{Solution}
     offspring = Array{Solution}(undef, 0)
     for (p1,p2) in parents
         (c1,c2) = recombine(p1,p2)
