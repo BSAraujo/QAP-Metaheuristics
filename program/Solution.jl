@@ -4,7 +4,7 @@ include("Params.jl")
 struct Solution
     params::Params               # Access to the problem and dataset parameters
     permutation::Array{Int64}    # Permutation
-    cost::Int64                # Value of objective function for the solution
+    cost::Int64                  # Value of objective function for the solution
 end
 
 # Constructor of struct Solution (random permutation)
@@ -28,6 +28,9 @@ function evaluate(params::Params, p::Array{Int64})::Float64
     A = params.A
     B = params.B
     cost = sum(A[i,j]*B[p[i],p[j]] for i = 1:n, j = 1:n)
+    if cost < 0
+        throw("Cost should be non negative!")
+    end
     return cost
 end
 

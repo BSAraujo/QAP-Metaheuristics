@@ -4,9 +4,9 @@ include("Params.jl")
 """ Recombination Operations for the Genetic Algorithm
 
 Implemented recombinations:
-- Order 1 Crossover
-- Partially Mapped Crossover (PMX)
-- Cycle Crossover
+- Order 1 Crossover - order1cx
+- Partially Mapped Crossover (PMX) - PMXcx
+- Cycle Crossover - cyclecx
 
 TODO:
 - Edge Recombination

@@ -18,9 +18,10 @@ While not Terminated
 End While
 Return Final solution found (local optima) 
 """
-function descentHeuristic(sol::Solution)::Solution
+function descentHeuristic(sol::Solution; max_iter::Float64=Inf)::Solution
     improved::Bool = true
-    while improved == true
+    num_iter = 0
+    while ((improved == true) && (num_iter < max_iter))
         neighborhood = generateSwapNeighbors(sol) # Generate N(S)
         improved = false
         for neighbor in neighborhood    # Explore( N(S) )
@@ -28,7 +29,8 @@ function descentHeuristic(sol::Solution)::Solution
                 sol = neighbor
                 improved = true
             end
-        end       
+        end
+        num_iter += 1
     end
     return sol  # return best solution found
 end

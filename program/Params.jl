@@ -16,11 +16,11 @@ end
 
 # Constructor of struct Params
 function Params(pathToInstance::String, pathToOutput::String, seed::Int, maxTime::Int)
-    datasetName = split(pathToInstance, '/')[end]
+    datasetName = split(pathToInstance, '\\')[end]
     sz, A, B = loadInstance(pathToInstance)
 
     solutionName = split(datasetName,'.')[1]*".sln"
-    solution_path = join(split(pathToInstance,'/')[1:end-2],'/')*"/solutions/"*solutionName
+    solution_path = joinpath(join(split(pathToInstance,'\\')[1:end-2],'\\'),"solutions",solutionName)
 
     if isfile(solution_path)
         sz_sol, cost, sol = loadSolution(solution_path)
@@ -28,8 +28,8 @@ function Params(pathToInstance::String, pathToOutput::String, seed::Int, maxTime
             throw("Size in instance file and solution file should be the same!")
         end
     else
-        cost = nothing
-        sol = nothing
+        cost = "NA"
+        sol = "NA"
     end
     params = Params(pathToInstance, pathToOutput, seed, maxTime, datasetName, sz, A, B, cost, sol)
     return params
@@ -42,32 +42,52 @@ function loadInstance(pathToInstance::String)
     s = open(pathToInstance) do file
         read(file, String)
     end
-    lines = split(s, '\n')
-    lines = [strip(l) for l in lines]
-    lines = lines[lines .!= ""]
+    s = split(strip(replace(s,"\n" => " ")), r"\s+")
 
-    sz = parse(Int, strip(lines[1]))
-    lines = lines[2:end]
-
-    A = Array{Int64}(undef, sz, sz)
-    for row = 1:sz
-        line = lines[row] 
-        for (col,elem) in enumerate(split(strip(line), r"\s+"))
-            A[row, col] = parse(Int64, elem)
-        end
+    sz = parse(Int, s[1])
+    if (length(s) != sz*sz*2+1)
+        throw("Size of instance does not match the size specified!")
     end
 
-    lines = lines[sz:end] 
+    s = s[2:end]
 
-    # Read array B
-    B = Array{Int64}(undef, sz, sz)
-    for row = 1:sz
-        line = lines[row] 
-        for (col,elem) in enumerate(split(strip(line), r"\s+"))
-            B[row, col] = parse(Int64, elem)
-        end
-    end
+    A = map(x->parse(Int64,x), reshape(s[1:sz^2],sz,sz))
+
+    s = s[sz^2+1:end]
+
+    B = map(x->parse(Int64,x), reshape(s[1:sz^2],sz,sz))
+
     return sz, A, B
+###################
+    # s = open(pathToInstance) do file
+    #     read(file, String)
+    # end
+    # lines = split(s, '\n')
+    # lines = [strip(l) for l in lines]
+    # lines = lines[lines .!= ""]
+
+    # sz = parse(Int, strip(lines[1]))
+    # lines = lines[2:end]
+
+    # A = Array{Int64}(undef, sz, sz)
+    # for row = 1:sz
+    #     line = lines[row] 
+    #     for (col,elem) in enumerate(split(strip(line), r"\s+"))
+    #         A[row, col] = parse(Int64, elem)
+    #     end
+    # end
+
+    # lines = lines[sz:end] 
+
+    # # Read array B
+    # B = Array{Int64}(undef, sz, sz)
+    # for row = 1:sz
+    #     line = lines[row] 
+    #     for (col,elem) in enumerate(split(strip(line), r"\s+"))
+    #         B[row, col] = parse(Int64, elem)
+    #     end
+    # end
+    # return sz, A, B
 end
 
 function loadSolution(solution_path::String)
