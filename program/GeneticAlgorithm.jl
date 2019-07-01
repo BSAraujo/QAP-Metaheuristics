@@ -10,7 +10,7 @@ Evaluate each candidate
 Repeat until Termination condition is satisfied
     Select parents (best fitness)
     Recombine pairs of solutions (Crossover)
-    Mutate the resulting offspring (Mutation) *Mutation was not implemented 
+    Mutate the resulting offspring (Mutation) 
     Evaluate new candidates
     Select individuals for the next generation
 """
@@ -18,7 +18,7 @@ Repeat until Termination condition is satisfied
 # Genetic Algorithm
 function runGA(params::Params, maxGenerations::Int, populationSize::Int;
                recombineOp::Function=order1cx, distanceFunc::Function=hamming, entropyReduceFunc::Function=mean,
-               mutate::Any=descentHeuristic, selectionOp::Function=fitnessSelection, selectionOpts::Dict{String,Any}=Dict{String,Any}("fitnessThreshold"=>0.2))
+               mutate::Any=false, selectionOp::Function=fitnessSelection, selectionOpts::Dict{String,Any}=Dict{String,Any}("fitnessThreshold"=>0.2))
     selectionOpts["n"] = populationSize
     selectionOpts["distanceFunc"] = hamming
     startTime = time()
@@ -45,7 +45,7 @@ function runGA(params::Params, maxGenerations::Int, populationSize::Int;
 
     generation = 0
     # Repeat until Termination condition is satisfied
-    while ((generation < maxGenerations) && (time() - startTime < params.maxTime))
+    while ((generation < maxGenerations) && (time() - startTime < params.maxTime) && (bestSol.cost != params.solutionCost))
         # Select parents
         population = shuffle!(population)  # shuffle population
         parents = [(population[i], population[i+Int(floor(length(population)/2))]) 
@@ -81,6 +81,7 @@ function runGA(params::Params, maxGenerations::Int, populationSize::Int;
         results["generations"] = generation
         generation += 1
     end
+    # Results
     results["time"] = time() - startTime
     results["finalCost"] = bestSol.cost
     results["permutation"] = bestSol.permutation
@@ -107,10 +108,11 @@ end
 
 function mutationOp(population::Array{Solution}, mutate::Function=descentHeuristic)::Array{Solution}
     for k = 1:length(population)
-        population[k] = mutate(population[k], max_iter=5.0)
+        population[k] = mutate(population[k], max_iter=1.0)
     end
     return population
 end
+
 
 ##############################################################################
 # Selection operation
@@ -262,36 +264,3 @@ end
 # TODO: function tests, especially for the recombination operations
 
 # TODO: formulate and solve the Mathematical Programming model of the QAP. Compare time and objective values.
-
-##############################################################################
-# Plotting
-
-using PyPlot
-function plotResults(results)
-    figure(figsize=(8,6))
-    subplot(221)
-    p1 = plot(results["entropy"])
-    title("Population Entropy")
-    subplot(222)
-    p2 = plot(results["numIndividuals"]) 
-    title("Population Size")
-    subplot(223)
-    p3 = plot(results["cost"])
-    title("Cost")
-    subplot(224)
-    genTime = [results["generationTime"][i]-results["generationTime"][i-1] 
-        for i=2:length(results["generationTime"])]
-    p4 = plot(genTime)
-    title("Execution Time")
-end
-
-function plotSurvivors(population, survivors)
-    indexScore, diversityScore, fitnessScore = fitnessDiversityScore(population,hamming)
-    fig = figure()
-    title("Survivors Plot")
-    xlabel("Fitness")
-    ylabel("Diversity")
-    G = scatter(fitnessScore[survivors],diversityScore[survivors],color="green", label="Survivors", s=30)
-    R = scatter(fitnessScore[.~survivors],diversityScore[.~survivors],color="red", label = "Non-survivors", s = 30)
-    legend(loc="right");
-end

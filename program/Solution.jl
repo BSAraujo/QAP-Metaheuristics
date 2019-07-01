@@ -61,6 +61,16 @@ function generateSwapNeighbors(sol::Solution)::Array{Solution}
     return neighborhood
 end
 
+function generateCyclicNeighbors(sol::Solution)::Array{Solution}
+    n = sol.params.datasetSize
+    neighborhood = Array{Solution}(undef, n)
+    for k=1:n
+        newP = circshift(sol.permutation, k)
+        neighborhood[k] = Solution(sol.params,newP)
+    end
+    return neighborhood
+end
+
 import Base: isless
 
 isless(a::Solution, b::Solution) = isless(a.cost, b.cost)
