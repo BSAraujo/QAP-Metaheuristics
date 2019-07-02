@@ -150,9 +150,6 @@ end
 # - Hamming distance
 # - Kendall-Tau distance
 
-# TODO: distance between solutions. 
-# Example: number of variables with different values. Or maybe distance between strings
-
 # Hamming distance: number of positions with different values
 function hamming(s1::Solution,s2::Solution)::Float64
     distance = sum(s1.permutation .!= s2.permutation)
