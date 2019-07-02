@@ -60,7 +60,6 @@ function runGA(params::Params, maxGenerations::Int, populationSize::Int;
         end
 
         # Evaluate new candidates
-        # TODO
 
         # Select individuals for the next generation
         population = vcat(population,offspring)
@@ -255,8 +254,6 @@ function biasedFitness(fitnessScore::Array{Float64}, diversityScore::Array{Float
     return biasedFitness
 end
 
-# TODO: save results from genetic algorithm:
-# generation, best cost, number of individuals, diversity measure
 
 # TODO: function tests, especially for the recombination operations
 

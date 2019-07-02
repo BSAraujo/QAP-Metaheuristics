@@ -28,8 +28,8 @@ function Params(pathToInstance::String, pathToOutput::String, seed::Int, maxTime
             throw("Size in instance file and solution file should be the same!")
         end
     else
-        cost = "NA"
-        sol = "NA"
+        cost = NaN
+        sol = NaN
     end
     params = Params(pathToInstance, pathToOutput, seed, maxTime, datasetName, sz, A, B, cost, sol)
     return params
@@ -58,36 +58,6 @@ function loadInstance(pathToInstance::String)
     B = map(x->parse(Int64,x), reshape(s[1:sz^2],sz,sz))
 
     return sz, A, B
-###################
-    # s = open(pathToInstance) do file
-    #     read(file, String)
-    # end
-    # lines = split(s, '\n')
-    # lines = [strip(l) for l in lines]
-    # lines = lines[lines .!= ""]
-
-    # sz = parse(Int, strip(lines[1]))
-    # lines = lines[2:end]
-
-    # A = Array{Int64}(undef, sz, sz)
-    # for row = 1:sz
-    #     line = lines[row] 
-    #     for (col,elem) in enumerate(split(strip(line), r"\s+"))
-    #         A[row, col] = parse(Int64, elem)
-    #     end
-    # end
-
-    # lines = lines[sz:end] 
-
-    # # Read array B
-    # B = Array{Int64}(undef, sz, sz)
-    # for row = 1:sz
-    #     line = lines[row] 
-    #     for (col,elem) in enumerate(split(strip(line), r"\s+"))
-    #         B[row, col] = parse(Int64, elem)
-    #     end
-    # end
-    # return sz, A, B
 end
 
 function loadSolution(solution_path::String)
